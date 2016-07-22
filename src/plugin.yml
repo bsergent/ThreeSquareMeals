@@ -1,0 +1,14 @@
+name: ThreeSquareMeals
+description: Create nutritional meals instead of just soup
+version: 0.0.1
+author: Ben Sergent V
+
+main: com.sergenttech.plugins.threesquaremeals.ThreeSquareMeals
+database: false
+
+permissions:
+      
+commands:
+  threesquaremeals:
+    description: Shows usage information for ThreeSquareMeals
+    aliases: [nutrients,food,nut,meal]
