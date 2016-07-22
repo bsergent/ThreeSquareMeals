@@ -32,10 +32,10 @@ public class CookingSurface implements Listener {
     }
    
     public void open(Player player) {
+        if (player.getOpenInventory() != null && player.getOpenInventory().getTitle().equals("Cooking Surface")) {
+            return;
+        }
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        //if (player.getOpenInventory() != null && player.getOpenInventory().getTitle().equals("Cooking Surface")) {
-        //    return;
-        //}
         viewer = player;
         inventory = Bukkit.createInventory(player, 27, "Cooking Surface");
         
@@ -72,10 +72,8 @@ public class CookingSurface implements Listener {
     
     private ItemStack processRecipe(ItemStack[] contents) {
         if (contents[0] == null || contents[0].getType() != Material.BOWL) {
-            plugin.getServer().broadcastMessage("Invalid recipe.");
             return null;
         }
-        plugin.getServer().broadcastMessage("Valid.");
         return new ItemStack(Material.MUSHROOM_SOUP);
     }
    
@@ -91,7 +89,7 @@ public class CookingSurface implements Listener {
                 e.setResult(Event.Result.DENY);
             //} else if (slot == 0 && e.getCursor() != null && e.getCursor().getType() != Material.BOWL) {
             //    e.setResult(Event.Result.DENY);
-            } else if (slot == 25 && e.getCursor() != null) {
+            } else if (slot == 25 && !(e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
                 e.setResult(Event.Result.DENY);
             }
             if (slot <= 26) {
@@ -103,13 +101,12 @@ public class CookingSurface implements Listener {
                     public void run() {
                       viewer.updateInventory();
                     }
-                }.runTaskLater(plugin, 1);
+                }.runTaskLater(plugin, 0);
         }
     }
     
     @EventHandler(priority=EventPriority.MONITOR)
     void onInventoryClose(org.bukkit.event.inventory.InventoryCloseEvent e) {
-        plugin.getServer().broadcastMessage("Closed");
         if (e.getInventory().getTitle().equals("Cooking Surface") && viewer != null) {
             ItemStack[] contents = inventory.getContents();
             if (contents[0] != null)
@@ -118,8 +115,6 @@ public class CookingSurface implements Listener {
                 if (contents[i] != null)
                     viewer.getWorld().dropItemNaturally(viewer.getLocation(), contents[i]);
             }
-            if (contents[25] != null)
-                viewer.getWorld().dropItemNaturally(viewer.getLocation(), contents[25]);
             destroy();
         }
     }
