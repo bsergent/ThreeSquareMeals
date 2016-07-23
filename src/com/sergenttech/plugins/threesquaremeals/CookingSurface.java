@@ -74,7 +74,75 @@ public class CookingSurface implements Listener {
         if (contents[0] == null || contents[0].getType() != Material.BOWL) {
             return null;
         }
-        return new ItemStack(Material.MUSHROOM_SOUP);
+        
+        // Make sure all ingredients are valid
+        boolean allNull = true;
+        for (int i = 19; i <= 23; i++) {
+            if (contents[i] != null) {
+                allNull = false;
+                try {
+                    Nutrition.valueOf(contents[i].getType().toString());
+                } catch (IllegalArgumentException ex) {
+                    return null;
+                }
+            }
+        }
+        if (allNull) return null;
+        
+        float portions = 0.0f;
+        int hunger = 0;
+        float saturation = 0.0f;
+        int[] nutrition = new int[5];
+        
+        // Calculate nutrional values
+        for (int i = 19; i <= 23; i++) {
+            if (contents[i] != null) {
+                hunger += Nutrition.valueOf(contents[i].getType().toString()).hunger;
+                saturation += Nutrition.valueOf(contents[i].getType().toString()).saturation;
+                portions += Nutrition.valueOf(contents[i].getType().toString()).portions;
+                for (int n = 0; n < 5; n++) {
+                    nutrition[n] += Nutrition.valueOf(contents[i].getType().toString()).nutrition[n];
+                }
+            }
+        }
+        
+        // Calculate portions
+        portions = (float) Math.ceil(portions);
+        hunger = (int) Math.round(hunger * 1.3f / portions);
+        saturation = saturation * 1.5f / portions;
+        saturation = Math.round(saturation * 10) / 10f;
+        for (int n = 0; n < 5; n++) {
+            nutrition[n] = (int) Math.ceil(nutrition[n] / portions);
+        }
+        
+        // Determine material based on nutrition
+        ItemStack result = new ItemStack(Material.MUSHROOM_SOUP);
+        // Protein > Rabbit Stew
+        // Vegetables > Retextured Mushroom Soup
+        // Fruits > Beetroot Stew
+        
+        // Add meta data based on nutrition
+        ItemMeta im = result.getItemMeta();
+        // Change name based upon nutrition
+        im.setDisplayName(ChatColor.RESET+"Meal");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 5; i++) {
+            sb.append(Nutrition.symbols[i]);
+            //sb.append(':');
+            sb.append(nutrition[i]);
+            sb.append(' ');
+        }
+        im.setLore(Arrays.asList(new String[] {
+            sb.toString().trim(),
+            ChatColor.GRAY+""+(int) portions+" portion(s)",
+            ChatColor.GRAY+""+(hunger / 2f)+" shanks",
+            ChatColor.GRAY+""+saturation+" saturation"
+        }));
+        
+        // Save effects somehow?
+        result.setItemMeta(im);
+        
+        return result;
     }
    
     @EventHandler(priority=EventPriority.MONITOR)
