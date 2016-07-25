@@ -92,7 +92,7 @@ public class CookingSurface implements Listener {
         float portions = 0.0f;
         int hunger = 0;
         float saturation = 0.0f;
-        int[] nutrition = new int[5];
+        int[] nutrition = new int[Nutrition.NUMOFNUTS];
         
         // Calculate nutrional values
         for (int i = 19; i <= 23; i++) {
@@ -100,7 +100,7 @@ public class CookingSurface implements Listener {
                 hunger += Nutrition.valueOf(contents[i].getType().toString()).hunger;
                 saturation += Nutrition.valueOf(contents[i].getType().toString()).saturation;
                 portions += Nutrition.valueOf(contents[i].getType().toString()).portions;
-                for (int n = 0; n < 5; n++) {
+                for (int n = 0; n < Nutrition.NUMOFNUTS; n++) {
                     nutrition[n] += Nutrition.valueOf(contents[i].getType().toString()).nutrition[n];
                 }
             }
@@ -111,7 +111,7 @@ public class CookingSurface implements Listener {
         hunger = (int) Math.round(hunger * 1.3f / portions);
         saturation = saturation * 1.5f / portions;
         saturation = Math.round(saturation * 10) / 10f;
-        for (int n = 0; n < 5; n++) {
+        for (int n = 0; n < Nutrition.NUMOFNUTS; n++) {
             nutrition[n] = (int) Math.ceil(nutrition[n] / portions);
         }
         
@@ -126,7 +126,7 @@ public class CookingSurface implements Listener {
         // Change name based upon nutrition
         im.setDisplayName(ChatColor.RESET+"Meal");
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < Nutrition.NUMOFNUTS; i++) {
             sb.append(Nutrition.symbols[i]);
             //sb.append(':');
             sb.append(nutrition[i]);

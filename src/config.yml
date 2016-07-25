@@ -1,3 +1,10 @@
 prefix: "&f[&6Nut&f]&f"
+# // 0.333d [20m/1d] [1m/60s] [1s/20t] = 5 days (1h40m) to get to 5 points or 8000 ticks
+nutritionDecayTicks: 8000
+# Value needed in each food group for full health
+fullHealthNutritionThreshould: 18
+# Use custom resource pack for cooking surface gui
 useRetexturedBarriers: false 
-# Uses glass panes instead
+maxHealth: 20
+minHealth: 6
+lowNutritionEffects: true

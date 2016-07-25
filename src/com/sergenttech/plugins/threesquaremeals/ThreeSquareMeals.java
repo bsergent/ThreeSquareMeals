@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.logging.Level;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -15,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  *
@@ -75,6 +77,7 @@ public class ThreeSquareMeals extends JavaPlugin {
 //        }
         
         getServer().getPluginManager().registerEvents(new MealListener(), this);
+        getServer().getScheduler().runTaskTimer(this, new NutritionTimer(), 20, getConfig().getInt("nutritionDecayTicks", 8000));
         
         getLogger().log(Level.INFO, "ThreeSquareMeals v{0} enabled.", version);
     }
@@ -88,19 +91,27 @@ public class ThreeSquareMeals extends JavaPlugin {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (cmd.getName().equalsIgnoreCase("threesquaremeals")) {
             if (args.length == 0) {
-                // TODO Show nutritional information
                 sender.sendMessage(ChatColor.GOLD+""+ChatColor.BOLD+"ThreeSquareMeals - Current Nutrition");
                 if (sender instanceof Player) {
-                    for (int i = 0; i < 5; i++) {
+                    updateHealth((Player) sender);
+                    for (int i = 0; i < Nutrition.NUMOFNUTS; i++) {
                         sender.sendMessage(getNutritionMeter((Player) sender, i));
                     }
-                    sender.sendMessage("         "+getMaxHealth((Player) sender)+"    Max Health");
+                    sender.sendMessage("    "+(getMaxHealth((Player) sender) / 2.0f)+" hrts  Max Health");
                 } else {
                     sender.sendMessage("    Nutritional details are shown here for players.");
                 }
                 sender.sendMessage(ChatColor.WHITE+"Visit "+ChatColor.GOLD+"http://bit.ly/1Cijgbl"+ChatColor.WHITE+" for mechanics, recipes, and more.");
             } else if (args.length >= 1 && args[0].equalsIgnoreCase("version")) {
                 sender.sendMessage(new String[] {ChatColor.GOLD+"ThreeSquareMeals v"+version});
+            } else if (args.length == 3 && args[0].equalsIgnoreCase("set") && sender instanceof Player && sender.isOp()) {
+                nutConfig.set(sender.getName()+".nut."+args[1], Integer.parseInt(args[2]));
+                try {
+                    nutConfig.save(playerNutFile);
+                } catch (IOException ex) {
+                }
+                updateHealth((Player) sender);
+                sender.sendMessage(prefix+" Updated nutrtional value of "+args[1]+" to "+args[2]);
             }
         }
         
@@ -134,32 +145,33 @@ public class ThreeSquareMeals extends JavaPlugin {
     }
     
     private int getMaxHealth(Player ply) {
-        int max = 0;
-        for (int i = 0; i < 5; i++) {
-            max += nutConfig.getInt(ply.getName()+".nut."+i, 20);
+        int totalNut = 0;
+        for (int i = 0; i < Nutrition.NUMOFNUTS; i++) {
+            totalNut += nutConfig.getInt(ply.getName()+".nut."+i, 20);
         }
-        max = Math.round(max / 6.666666f);
-        max += 5;
-        return max;
+        if (totalNut > getConfig().getInt("fullHealthNutritionThreshould", 18) * Nutrition.NUMOFNUTS) totalNut = getConfig().getInt("fullHealthNutritionThreshould", 18) * Nutrition.NUMOFNUTS;
+        return Math.round(
+                (getConfig().getInt("maxHealth", 20) - getConfig().getInt("minHealth", 6)) // 14
+                * (totalNut/(getConfig().getInt("fullHealthNutritionThreshould", 18) * 1.0f * Nutrition.NUMOFNUTS))  // 0 to 1
+                + getConfig().getInt("minHealth", 6) // 6
+            );
+    }
+    
+    private void updateHealth(Player ply) {
+        ply.setMaxHealth(getMaxHealth(ply));
+        if (ply.getHealth() > ply.getMaxHealth()) {
+            ply.setHealth(ply.getMaxHealth());
+        }
     }
 
     private final class MealListener implements Listener {
         
-        /*@org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.NORMAL)
-        public void onPlayerCraft(org.bukkit.event.inventory.PrepareItemCraftEvent e) {
-            if (!e.isRepair()) {
-                ItemStack[] matrix = e.getInventory().getMatrix();
-                boolean foundBowl = false;
-                for (ItemStack is : matrix) {
-                    if (is.getType() == Material.BOWL) {
-                        e.getViewers().get(0).sendMessage("Found a bowl!");
-                    }
-                }
-                if (!foundBowl)
-                    return;
-                e.getInventory().setResult(new ItemStack(Material.SPONGE));
-            }
-        }*/
+        @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
+        public void onConsumeItem(org.bukkit.event.player.PlayerItemConsumeEvent e) {
+            // Check if it's food
+            // Update nutritional values
+            updateHealth(e.getPlayer());
+        }
         
         @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.NORMAL)
         public void onPlayerInteract(org.bukkit.event.player.PlayerInteractEvent e) {
@@ -174,6 +186,27 @@ public class ThreeSquareMeals extends JavaPlugin {
             }
         }
         
+    }
+    
+    public class NutritionTimer extends BukkitRunnable {
+
+        @Override
+        public void run() {
+            Collection<Player> players = (Collection<Player>) getServer().getOnlinePlayers();
+            for (Player ply : players) {
+                for (int id = 0; id < Nutrition.NUMOFNUTS; id++) {
+                    nutConfig.set(ply.getName()+".nut."+id, nutConfig.getInt(ply.getName()+".nut."+id, 20) - 1);
+                    if (nutConfig.getInt(ply.getName()+".nut."+id, 20) < 0) nutConfig.set(ply.getName()+".nut."+id, 0);
+                    // TODO Store nutrition values under player UUID instead of name
+                }
+                updateHealth(ply);
+                try {
+                    nutConfig.save(playerNutFile);
+                } catch (IOException ex) {
+                }
+            }
+        }
+
     }
 
 }

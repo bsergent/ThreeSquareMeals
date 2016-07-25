@@ -34,6 +34,7 @@ public enum Nutrition {
     LONG_GRASS,
     MELON,
     MELON_SEEDS,
+    MILK_BUCKET,
     NETHER_WARTS,
     POTATO_ITEM,
     PUMPKIN,
@@ -46,10 +47,12 @@ public enum Nutrition {
     VINE*/,
     WHEAT(1,2.2f,0.5f,0,0,2,0,0);
     
+    public static final int NUMOFNUTS = 5;
+    
     protected final int hunger;
     protected final float saturation;
     protected final float portions;
-    protected final int[] nutrition = new int[5]; // F V G P D
+    protected final int[] nutrition = new int[NUMOFNUTS]; // F V G P D
     
     public static final String[] symbols = new String[] {
         ChatColor.AQUA+"F",
