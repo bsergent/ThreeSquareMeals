@@ -12,6 +12,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -167,8 +168,9 @@ public class CookingSurface implements Listener {
             //    e.setResult(Event.Result.DENY);
             } else if (slot == resultSlot && !(e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
                 e.setResult(Event.Result.DENY);
+                // TODO Remove ingredients after confirming the recipe
             }
-            if (slot <= 26) {
+            if (slot >= 0 && slot <= 26) {
                 contents[slot] = e.getCursor();
             }
             e.getInventory().setItem(resultSlot, processRecipe(contents));
@@ -178,6 +180,13 @@ public class CookingSurface implements Listener {
                       viewer.updateInventory();
                     }
                 }.runTaskLater(plugin, 0);
+        }
+    }
+    
+    @EventHandler(priority=EventPriority.MONITOR)
+    public void onInventoryDrag(InventoryDragEvent e) {
+        if (e.getInventory().getTitle().equals("Cooking Surface")) {
+            // TODO Update recipes on drag as well
         }
     }
     

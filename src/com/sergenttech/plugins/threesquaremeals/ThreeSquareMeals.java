@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -15,6 +16,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -93,11 +96,13 @@ public class ThreeSquareMeals extends JavaPlugin {
             if (args.length == 0) {
                 sender.sendMessage(ChatColor.GOLD+""+ChatColor.BOLD+"ThreeSquareMeals - Current Nutrition");
                 if (sender instanceof Player) {
-                    updateHealth((Player) sender);
+                    Player ply = (Player) sender;
+                    updateHealth(ply);
                     for (int i = 0; i < Nutrition.NUMOFNUTS; i++) {
-                        sender.sendMessage(getNutritionMeter((Player) sender, i));
+                        ply.sendMessage(getNutritionMeter(ply, i));
                     }
-                    sender.sendMessage("    "+(getMaxHealth((Player) sender) / 2.0f)+" hrts  Max Health");
+                    ply.sendMessage("    "+(getMaxHealth(ply) / 2.0f)+" hrts  Max Health");
+                    ply.sendMessage("Hunger: "+ply.getFoodLevel()+"/20    "+"Saturation: "+ply.getSaturation()+"/20");
                 } else {
                     sender.sendMessage("    Nutritional details are shown here for players.");
                 }
@@ -175,16 +180,75 @@ public class ThreeSquareMeals extends JavaPlugin {
                 return;
             }
             Player ply = e.getPlayer();
-            // TODO Check if the consumed item is a meal and parse the lore if it is
+            int[] nutrition = new int[Nutrition.NUMOFNUTS];
+            if (e.getItem().hasItemMeta() 
+                    && e.getItem().getItemMeta().hasLore() 
+                    && e.getItem().getItemMeta().hasDisplayName() 
+                    && e.getItem().getItemMeta().getDisplayName().contains("Meal")) {
+                String nutritionLine = e.getItem().getItemMeta().getLore().get(0);
+                String[] result = nutritionLine.split("\\s*"+ChatColor.COLOR_CHAR+"[0123456789abcdef][A-Z]", Nutrition.NUMOFNUTS+1);
+                int nutId = 0;
+                for (String r : result) {
+                    if (r.equals("")) continue;
+                    nutrition[nutId] = Integer.parseInt(r);
+                    nutId++;
+                }
+                
+            } else {
+                System.arraycopy(Nutrition.valueOf(e.getItem().getType().toString()).nutrition, 0, nutrition, 0, Nutrition.NUMOFNUTS);
+            }
+            
             for (int id = 0; id < Nutrition.NUMOFNUTS; id++) {
                 nutConfig.set(
                         ply.getUniqueId()+".nut."+id, 
                         nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) 
-                        + Math.round(Nutrition.valueOf(e.getItem().getType().toString()).nutrition[id]
-                                * Nutrition.valueOf(e.getItem().getType().toString()).portions)
+                        + Math.round(nutrition[id] * Nutrition.valueOf(e.getItem().getType().toString()).portions)
                 );
                 if (nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) > 20) nutConfig.set(ply.getUniqueId()+".nut."+id, 20);
             }
+            
+            if (e.getItem().hasItemMeta() 
+                    && e.getItem().getItemMeta().hasLore() 
+                    && e.getItem().getItemMeta().hasDisplayName() 
+                    && e.getItem().getItemMeta().getDisplayName().contains("Meal")) {
+                e.setCancelled(true);
+                ItemStack is = e.getItem();
+                ItemMeta im = is.getItemMeta();
+                List<String> lore = im.getLore();
+                
+                // Hunger
+                e.getPlayer().setFoodLevel(
+                        Math.min(
+                                e.getPlayer().getFoodLevel()+(int)(Float.parseFloat(lore.get(2).split(" ")[0].substring(2))*2)
+                                ,20)
+                );
+                
+                // Saturation
+                e.getPlayer().setSaturation(
+                        Math.min(
+                                e.getPlayer().getSaturation()+Float.parseFloat(lore.get(3).split(" ")[0].substring(2))
+                                ,20)
+                );
+                
+                // Portions
+                int portionsValue = Integer.parseInt(lore.get(1).split(" ")[0].substring(2));
+                portionsValue--;
+                lore.set(1, ChatColor.GRAY + "" + (portionsValue) + " portion(s)");
+                
+                if (portionsValue <= 0) {
+                    //e.getPlayer().sendMessage(e.getItem().toString());
+                    //e.getPlayer().sendMessage(e.getPlayer().getInventory().getItemInOffHand().toString());
+                    //e.getPlayer().getInventory().setItem(e.getPlayer().getInventory().first(e.getItem()), new ItemStack(Material.BOWL));
+                    e.getPlayer().getInventory().setItemInMainHand(new ItemStack(Material.BOWL));
+                    // TODO Make this compatible with eating in the offhand
+                } else {
+                    im.setLore(lore);
+                    is.setItemMeta(im);
+                    //e.getPlayer().getInventory().setItem(e.getPlayer().getInventory().first(e.getItem()), is);
+                    e.getPlayer().getInventory().setItemInMainHand(is);
+                }
+            }
+            
             updateHealth(e.getPlayer());
             try {
                 nutConfig.save(playerNutFile);
