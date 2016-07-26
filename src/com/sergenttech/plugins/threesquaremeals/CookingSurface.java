@@ -164,16 +164,33 @@ public class CookingSurface implements Listener {
                 e.setResult(Event.Result.DENY);
             } else if (e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.BARRIER) {
                 e.setResult(Event.Result.DENY);
-            //} else if (slot == 0 && e.getCursor() != null && e.getCursor().getType() != Material.BOWL) {
-            //    e.setResult(Event.Result.DENY);
             } else if (slot == resultSlot && !(e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
                 e.setResult(Event.Result.DENY);
-                // TODO Remove ingredients after confirming the recipe
             }
             if (slot >= 0 && slot <= 26) {
                 contents[slot] = e.getCursor();
             }
             e.getInventory().setItem(resultSlot, processRecipe(contents));
+            if (slot == resultSlot && (e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
+                for (int iSlot : ingredientSlots) {
+                    if (contents[iSlot] != null) {
+                        if (contents[iSlot].getType() == Material.MILK_BUCKET) {
+                            contents[iSlot].setType(Material.BUCKET);
+                        } else {
+                            if (contents[iSlot].getAmount() <= 1) {
+                                e.getInventory().setItem(iSlot, null);
+                            } else {
+                                contents[iSlot].setAmount(contents[iSlot].getAmount() - 1);
+                            }
+                        }
+                    }
+                }
+                if (contents[bowlSlot] != null && contents[bowlSlot].getAmount() <= 1) {
+                    e.getInventory().setItem(bowlSlot, null);
+                } else {
+                    contents[bowlSlot].setAmount(contents[bowlSlot].getAmount() - 1);
+                }
+            }
             new BukkitRunnable() {
                     @Override
                     public void run() {
