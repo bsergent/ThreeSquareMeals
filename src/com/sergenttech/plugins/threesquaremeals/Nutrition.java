@@ -9,6 +9,8 @@ import org.bukkit.ChatColor;
  */
 public enum Nutrition {
     
+    // Nutrition value is per portion
+    
     APPLE(4,2.4f,0.3f,4,0,0,0,0),
     /*BAKED_POTATO,
     BEETROOT,
@@ -18,7 +20,7 @@ public enum Nutrition {
     CAKE_BLOCK,
     CARROT_ITEM,
     CHORUS_FRUIT,*/
-    COOKED_BEEF(8,12.8f,2.0f,0,0,0,16,0)/*,
+    COOKED_BEEF(8,12.8f,2.0f,0,0,0,4,0)/*,
     COOKED_CHICKEN,
     COOKED_CHICKEN,
     COOKED_FISH,

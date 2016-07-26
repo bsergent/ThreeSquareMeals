@@ -105,7 +105,7 @@ public class ThreeSquareMeals extends JavaPlugin {
             } else if (args.length >= 1 && args[0].equalsIgnoreCase("version")) {
                 sender.sendMessage(new String[] {ChatColor.GOLD+"ThreeSquareMeals v"+version});
             } else if (args.length == 3 && args[0].equalsIgnoreCase("set") && sender instanceof Player && sender.isOp()) {
-                nutConfig.set(sender.getName()+".nut."+args[1], Integer.parseInt(args[2]));
+                nutConfig.set(((Player)sender).getUniqueId()+".nut."+args[1], Integer.parseInt(args[2]));
                 try {
                     nutConfig.save(playerNutFile);
                 } catch (IOException ex) {
@@ -125,7 +125,7 @@ public class ThreeSquareMeals extends JavaPlugin {
     private String getNutritionMeter(Player ply, int id) {
         StringBuilder sb = new StringBuilder();
         sb.append("    [");
-        int level = nutConfig.getInt(ply.getName()+".nut."+id, 20);
+        int level = nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20);
         if (level > 9) {
             sb.append(ChatColor.GREEN);
         } else if (level > 4) {
@@ -147,7 +147,7 @@ public class ThreeSquareMeals extends JavaPlugin {
     private int getMaxHealth(Player ply) {
         int totalNut = 0;
         for (int i = 0; i < Nutrition.NUMOFNUTS; i++) {
-            totalNut += nutConfig.getInt(ply.getName()+".nut."+i, 20);
+            totalNut += nutConfig.getInt(ply.getUniqueId()+".nut."+i, 20);
         }
         if (totalNut > getConfig().getInt("fullHealthNutritionThreshould", 18) * Nutrition.NUMOFNUTS) totalNut = getConfig().getInt("fullHealthNutritionThreshould", 18) * Nutrition.NUMOFNUTS;
         return Math.round(
@@ -168,9 +168,29 @@ public class ThreeSquareMeals extends JavaPlugin {
         
         @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
         public void onConsumeItem(org.bukkit.event.player.PlayerItemConsumeEvent e) {
-            // Check if it's food
-            // Update nutritional values
+            if (e.getItem() == null) return;
+            try {
+                Nutrition.valueOf(e.getItem().getType().toString());
+            } catch (IllegalArgumentException ex) {
+                return;
+            }
+            Player ply = e.getPlayer();
+            // TODO Check if the consumed item is a meal and parse the lore if it is
+            for (int id = 0; id < Nutrition.NUMOFNUTS; id++) {
+                nutConfig.set(
+                        ply.getUniqueId()+".nut."+id, 
+                        nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) 
+                        + Math.round(Nutrition.valueOf(e.getItem().getType().toString()).nutrition[id]
+                                * Nutrition.valueOf(e.getItem().getType().toString()).portions)
+                );
+                if (nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) > 20) nutConfig.set(ply.getUniqueId()+".nut."+id, 20);
+            }
             updateHealth(e.getPlayer());
+            try {
+                nutConfig.save(playerNutFile);
+            } catch (IOException ex) {
+            }
+            // TODO Show nutrition change in chat
         }
         
         @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.NORMAL)
@@ -195,9 +215,8 @@ public class ThreeSquareMeals extends JavaPlugin {
             Collection<Player> players = (Collection<Player>) getServer().getOnlinePlayers();
             for (Player ply : players) {
                 for (int id = 0; id < Nutrition.NUMOFNUTS; id++) {
-                    nutConfig.set(ply.getName()+".nut."+id, nutConfig.getInt(ply.getName()+".nut."+id, 20) - 1);
-                    if (nutConfig.getInt(ply.getName()+".nut."+id, 20) < 0) nutConfig.set(ply.getName()+".nut."+id, 0);
-                    // TODO Store nutrition values under player UUID instead of name
+                    nutConfig.set(ply.getUniqueId()+".nut."+id, nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) - 1);
+                    if (nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) < 0) nutConfig.set(ply.getUniqueId()+".nut."+id, 0);
                 }
                 updateHealth(ply);
                 try {
