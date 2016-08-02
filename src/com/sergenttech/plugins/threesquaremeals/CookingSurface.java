@@ -160,7 +160,7 @@ public class CookingSurface implements Listener {
             ItemStack[] contents = e.getInventory().getContents();
             int slot = e.getRawSlot();
             if (slot == infoSlot) {
-                e.getWhoClicked().sendMessage(plugin.getPrefix()+" Visit http://bit.ly/1Cijgbl for help with cooking your meals.");
+                e.getWhoClicked().sendMessage(plugin.getPrefix()+" Visit http://bit.ly/32M-Cooking for help with cooking your meals.");
                 e.setResult(Event.Result.DENY);
             } else if (e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.BARRIER) {
                 e.setResult(Event.Result.DENY);

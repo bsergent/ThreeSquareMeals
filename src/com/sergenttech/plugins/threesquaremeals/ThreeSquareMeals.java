@@ -28,7 +28,7 @@ import org.bukkit.scheduler.BukkitRunnable;
  */
 public class ThreeSquareMeals extends JavaPlugin {
     
-    private final String version = "0.0.1";
+    private final String version = "0.1.0";
     private String prefix = ChatColor.WHITE+"["+ChatColor.GOLD+"Nut"+ChatColor.WHITE+"]";
     
     private org.bukkit.configuration.file.FileConfiguration nutConfig;
@@ -108,7 +108,7 @@ public class ThreeSquareMeals extends JavaPlugin {
                 } else {
                     sender.sendMessage("    Nutritional details are shown here for players.");
                 }
-                sender.sendMessage(ChatColor.WHITE+"Visit "+ChatColor.GOLD+"http://bit.ly/1Cijgbl"+ChatColor.WHITE+" for mechanics, recipes, and more.");
+                sender.sendMessage(ChatColor.WHITE+"Visit "+ChatColor.GOLD+"http://bit.ly/32M-Wiki"+ChatColor.WHITE+" for mechanics, recipes, and more.");
             } else if (args.length >= 1 && args[0].equalsIgnoreCase("version")) {
                 sender.sendMessage(new String[] {ChatColor.GOLD+"ThreeSquareMeals v"+version});
             } else if (args.length == 3 && args[0].equalsIgnoreCase("set") && sender instanceof Player && sender.isOp()) {
