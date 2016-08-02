@@ -54,6 +54,7 @@ public class ThreeSquareMeals extends JavaPlugin {
             languageFile = new java.io.File(getDataFolder(), "language.yml");
             if (!languageFile.exists()) {
                 try {
+                    languageFile.createNewFile();
                     InputStream in = getResource("language.yml");
                     OutputStream out = new FileOutputStream(languageFile);
                     byte[] buf = new byte[1024];
@@ -268,7 +269,10 @@ public class ThreeSquareMeals extends JavaPlugin {
         @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.NORMAL)
         public void onPlayerInteract(org.bukkit.event.player.PlayerInteractEvent e) {
             if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                if (e.getClickedBlock().getType() == Material.WOOD_PLATE || e.getClickedBlock().getType() == Material.STONE_PLATE) {
+                if (e.getClickedBlock().getType() == Material.WOOD_PLATE
+                        || e.getClickedBlock().getType() == Material.STONE_PLATE
+                        || e.getClickedBlock().getType() == Material.IRON_PLATE
+                        || e.getClickedBlock().getType() == Material.GOLD_PLATE) {
                     Block clkdBlk = e.getClickedBlock();
                     Material typeBelow = clkdBlk.getWorld().getBlockAt(clkdBlk.getLocation().clone().add(0, -1, 0)).getType();
                     if (typeBelow == Material.FURNACE || typeBelow == Material.BURNING_FURNACE) {
