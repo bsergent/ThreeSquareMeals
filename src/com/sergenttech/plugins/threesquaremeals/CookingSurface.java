@@ -12,6 +12,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -26,6 +27,19 @@ public class CookingSurface implements Listener {
     protected ThreeSquareMeals plugin;
     private Player viewer;
     private Inventory inventory;
+    
+    /*
+    0  | - B - F F - - - i | 8      B = Bowl    i = Information
+    9  | - - - F F - - - - | 17     F = Food Ingredients
+    18 | - - - F F - R - - | 26     R = Result
+       | 00 01 02 03 04 05 06 07 08 |
+       | 09 10 11 12 13 14 15 16 17 |
+       | 18 19 20 21 22 23 24 25 26 |
+    */
+    private final int bowlSlot = 1;
+    private final int[] ingredientSlots = {3,4,12,13,21,22};
+    private final int resultSlot = 24;
+    private final int infoSlot = 7;
    
     public CookingSurface(ThreeSquareMeals plugin) {
         this.plugin = plugin;
@@ -44,21 +58,16 @@ public class CookingSurface implements Listener {
         ItemStack info = new ItemStack(Material.INK_SACK, 1, (short) 12);
         setItemNameAndLore(info, ChatColor.RESET+""+ChatColor.AQUA+"Help", new String[] {ChatColor.GRAY+"Click for more info"});
         
-        /*
-        0  | B - - - - - - - i | 8      B = Bowl    i = Information
-        9  | - - - - - - - - - | 17     F = Food Ingredients
-        18 | - F F F F F - R - | 26     R = Result
-        */
-        for (int i = 1; i <= 7; i++) {
+        
+        for (int i = 0; i <= 26; i++) {
             inventory.setItem(i, bar);
         }
-        inventory.setItem(8, info);
-        for (int i = 9; i <= 17; i++) {
-            inventory.setItem(i, bar);
+        inventory.setItem(bowlSlot, null);
+        for (int i : ingredientSlots) {
+            inventory.setItem(i, null);
         }
-        inventory.setItem(18, bar);
-        inventory.setItem(24, bar);
-        inventory.setItem(26, bar);
+        inventory.setItem(resultSlot, null);
+        inventory.setItem(infoSlot, info);
         
         player.openInventory(inventory);
     }
@@ -71,13 +80,13 @@ public class CookingSurface implements Listener {
     }
     
     private ItemStack processRecipe(ItemStack[] contents) {
-        if (contents[0] == null || contents[0].getType() != Material.BOWL) {
+        if (contents[bowlSlot] == null || contents[bowlSlot].getType() != Material.BOWL) {
             return null;
         }
         
         // Make sure all ingredients are valid
         boolean allNull = true;
-        for (int i = 19; i <= 23; i++) {
+        for (int i : ingredientSlots) {
             if (contents[i] != null) {
                 allNull = false;
                 try {
@@ -95,7 +104,7 @@ public class CookingSurface implements Listener {
         int[] nutrition = new int[Nutrition.NUMOFNUTS];
         
         // Calculate nutrional values
-        for (int i = 19; i <= 23; i++) {
+        for (int i : ingredientSlots) {
             if (contents[i] != null) {
                 hunger += Nutrition.valueOf(contents[i].getType().toString()).hunger;
                 saturation += Nutrition.valueOf(contents[i].getType().toString()).saturation;
@@ -150,20 +159,38 @@ public class CookingSurface implements Listener {
         if (e.getInventory().getTitle().equals("Cooking Surface")) {
             ItemStack[] contents = e.getInventory().getContents();
             int slot = e.getRawSlot();
-            if (slot == 8) {
-                e.getWhoClicked().sendMessage(plugin.getPrefix()+" Visit http://bit.ly/1Cijgbl for help with cooking your meals.");
+            if (slot == infoSlot) {
+                e.getWhoClicked().sendMessage(plugin.getPrefix()+" Visit http://bit.ly/32M-Cooking for help with cooking your meals.");
                 e.setResult(Event.Result.DENY);
             } else if (e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.BARRIER) {
                 e.setResult(Event.Result.DENY);
-            //} else if (slot == 0 && e.getCursor() != null && e.getCursor().getType() != Material.BOWL) {
-            //    e.setResult(Event.Result.DENY);
-            } else if (slot == 25 && !(e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
+            } else if (slot == resultSlot && !(e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
                 e.setResult(Event.Result.DENY);
             }
-            if (slot <= 26) {
+            if (slot >= 0 && slot <= 26) {
                 contents[slot] = e.getCursor();
             }
-            e.getInventory().setItem(25, processRecipe(contents));
+            e.getInventory().setItem(resultSlot, processRecipe(contents));
+            if (slot == resultSlot && (e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
+                for (int iSlot : ingredientSlots) {
+                    if (contents[iSlot] != null) {
+                        if (contents[iSlot].getType() == Material.MILK_BUCKET) {
+                            contents[iSlot].setType(Material.BUCKET);
+                        } else {
+                            if (contents[iSlot].getAmount() <= 1) {
+                                e.getInventory().setItem(iSlot, null);
+                            } else {
+                                contents[iSlot].setAmount(contents[iSlot].getAmount() - 1);
+                            }
+                        }
+                    }
+                }
+                if (contents[bowlSlot] != null && contents[bowlSlot].getAmount() <= 1) {
+                    e.getInventory().setItem(bowlSlot, null);
+                } else {
+                    contents[bowlSlot].setAmount(contents[bowlSlot].getAmount() - 1);
+                }
+            }
             new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -174,14 +201,21 @@ public class CookingSurface implements Listener {
     }
     
     @EventHandler(priority=EventPriority.MONITOR)
+    public void onInventoryDrag(InventoryDragEvent e) {
+        if (e.getInventory().getTitle().equals("Cooking Surface")) {
+            // TODO Update recipes on drag as well
+        }
+    }
+    
+    @EventHandler(priority=EventPriority.MONITOR)
     void onInventoryClose(org.bukkit.event.inventory.InventoryCloseEvent e) {
         if (e.getInventory().getTitle().equals("Cooking Surface") && viewer != null) {
             ItemStack[] contents = inventory.getContents();
-            if (contents[0] != null)
-                viewer.getWorld().dropItemNaturally(viewer.getLocation(), contents[0]);
-            for (int i = 19; i <= 23; i++) {
-                if (contents[i] != null)
-                    viewer.getWorld().dropItemNaturally(viewer.getLocation(), contents[i]);
+            if (contents[bowlSlot] != null)
+                viewer.getWorld().dropItemNaturally(viewer.getLocation(), contents[bowlSlot]);
+            for (int slot : ingredientSlots) {
+                if (contents[slot] != null)
+                    viewer.getWorld().dropItemNaturally(viewer.getLocation(), contents[slot]);
             }
             destroy();
         }
