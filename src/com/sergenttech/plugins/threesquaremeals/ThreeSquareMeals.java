@@ -28,7 +28,7 @@ import org.bukkit.scheduler.BukkitRunnable;
  */
 public class ThreeSquareMeals extends JavaPlugin {
     
-    private final String version = "0.1.0";
+    private final String version = "0.2.0";
     private String prefix = ChatColor.WHITE+"["+ChatColor.GOLD+"Nut"+ChatColor.WHITE+"]";
     
     private org.bukkit.configuration.file.FileConfiguration nutConfig;
@@ -74,12 +74,11 @@ public class ThreeSquareMeals extends JavaPlugin {
         }
         languageConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(languageFile);
         
-//        try {
-//            org.mcstats.MetricsLite metrics = new org.mcstats.MetricsLite(this);
-//            metrics.start();
-//        } catch (IOException e) {
-//            // Failed to submit the stats :-(
-//        }
+        try {
+            org.mcstats.MetricsLite metrics = new org.mcstats.MetricsLite(this);
+            metrics.start();
+        } catch (IOException e) {
+        }
         
         getServer().getPluginManager().registerEvents(new MealListener(), this);
         getServer().getScheduler().runTaskTimer(this, new NutritionTimer(), 20, getConfig().getInt("nutritionDecayTicks", 8000));

@@ -54,6 +54,10 @@ public class CookingSurface implements Listener {
         inventory = Bukkit.createInventory(player, 27, "Cooking Surface");
         
         ItemStack bar = new ItemStack(Material.BARRIER);
+        if (!plugin.getConfig().getBoolean("useRetexturedBarriers", false)) {
+            bar.setType(Material.STAINED_GLASS_PANE);
+            bar.setDurability((short) 15);
+        }
         setItemNameAndLore(bar, " ", new String[0]);
         ItemStack info = new ItemStack(Material.INK_SACK, 1, (short) 12);
         setItemNameAndLore(info, ChatColor.RESET+""+ChatColor.AQUA+"Help", new String[] {ChatColor.GRAY+"Click for more info"});
@@ -162,7 +166,7 @@ public class CookingSurface implements Listener {
             if (slot == infoSlot) {
                 e.getWhoClicked().sendMessage(plugin.getPrefix()+" Visit http://bit.ly/32M-Cooking for help with cooking your meals.");
                 e.setResult(Event.Result.DENY);
-            } else if (e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.BARRIER) {
+            } else if (e.getCurrentItem() != null && (e.getCurrentItem().getType() == Material.BARRIER || e.getCurrentItem().getType() == Material.STAINED_GLASS_PANE)) {
                 e.setResult(Event.Result.DENY);
             } else if (slot == resultSlot && !(e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
                 e.setResult(Event.Result.DENY);
@@ -185,10 +189,12 @@ public class CookingSurface implements Listener {
                         }
                     }
                 }
-                if (contents[bowlSlot] != null && contents[bowlSlot].getAmount() <= 1) {
-                    e.getInventory().setItem(bowlSlot, null);
-                } else {
-                    contents[bowlSlot].setAmount(contents[bowlSlot].getAmount() - 1);
+                if (contents[bowlSlot] != null) {
+                    if (contents[bowlSlot].getAmount() <= 1) {
+                        e.getInventory().setItem(bowlSlot, null);
+                    } else {
+                        contents[bowlSlot].setAmount(contents[bowlSlot].getAmount() - 1);
+                    }
                 }
             }
             new BukkitRunnable() {
