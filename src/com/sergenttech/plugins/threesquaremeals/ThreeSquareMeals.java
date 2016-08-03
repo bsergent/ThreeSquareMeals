@@ -28,7 +28,7 @@ import org.bukkit.scheduler.BukkitRunnable;
  */
 public class ThreeSquareMeals extends JavaPlugin {
     
-    private final String version = "0.1.0";
+    private final String version = "0.2.0";
     private String prefix = ChatColor.WHITE+"["+ChatColor.GOLD+"Nut"+ChatColor.WHITE+"]";
     
     private org.bukkit.configuration.file.FileConfiguration nutConfig;
