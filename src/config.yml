@@ -7,4 +7,3 @@ fullHealthNutritionThreshould: 18
 useRetexturedBarriers: false 
 maxHealth: 20
 minHealth: 6
-lowNutritionEffects: true
