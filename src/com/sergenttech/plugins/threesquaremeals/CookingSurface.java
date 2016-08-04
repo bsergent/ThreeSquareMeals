@@ -157,6 +157,21 @@ public class CookingSurface implements Listener {
         
         return result;
     }
+    
+    public static boolean isSimilarMeal(ItemStack is1, ItemStack is2) {
+        if (!isMeal(is1) || !isMeal(is2)) return false;
+        if (!is1.getItemMeta().getLore().get(0).equals(is2.getItemMeta().getLore().get(0))) return false;
+        if (!is1.getItemMeta().getLore().get(2).equals(is2.getItemMeta().getLore().get(2))) return false;
+        return is1.getItemMeta().getLore().get(3).equals(is2.getItemMeta().getLore().get(3));
+    }
+    
+    public static boolean isMeal(ItemStack is) {
+        if (is.getType() != Material.MUSHROOM_SOUP && is.getType() != Material.RABBIT_STEW && is.getType() != Material.BEETROOT_SOUP) return false;
+        if (!is.hasItemMeta()) return false;
+        if (!is.getItemMeta().hasDisplayName()) return false;
+        if (!is.getItemMeta().hasLore()) return false;
+        return is.getItemMeta().getDisplayName().contains("Meal");
+    }
    
     @EventHandler(priority=EventPriority.MONITOR)
     public void onInventoryClick(InventoryClickEvent e) {
