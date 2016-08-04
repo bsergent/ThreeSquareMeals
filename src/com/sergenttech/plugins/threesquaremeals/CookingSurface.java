@@ -2,6 +2,7 @@
 package com.sergenttech.plugins.threesquaremeals;
 
 import java.util.Arrays;
+import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -102,6 +103,39 @@ public class CookingSurface implements Listener {
         }
         if (allNull) return null;
         
+        // Check if combining meals
+        ItemStack mealToCombine = null;
+        for (int i : ingredientSlots) {
+            if (contents[i] != null) {
+                if (!isMeal(contents[i]) || (mealToCombine != null && !isSimilarMeal(mealToCombine, contents[i]))) {
+                    mealToCombine = null;
+                    break;
+                } else {
+                    mealToCombine = contents[i].clone();
+                }
+            }
+        }
+        
+        // Combine meals
+        if (mealToCombine != null) {
+            int portions = 0;
+            for (int i : ingredientSlots) {
+                if (contents[i] != null) {
+                    String portionLine = contents[i].getItemMeta().getLore().get(1);
+                    portionLine = portionLine.split(" ", 2)[0];
+                    portionLine = portionLine.substring(2);
+                    portions += Integer.parseInt(portionLine);
+                }
+            }
+            ItemMeta im = mealToCombine.getItemMeta();
+            List<String> lore = im.getLore();
+            lore.set(1, ChatColor.GRAY+""+portions+" portion(s)");
+            im.setLore(lore);
+            mealToCombine.setItemMeta(im);
+            return mealToCombine;
+        }
+        
+        // Else create new meal
         float portions = 0.0f;
         int hunger = 0;
         float saturation = 0.0f;

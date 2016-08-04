@@ -182,10 +182,7 @@ public class ThreeSquareMeals extends JavaPlugin {
             }
             Player ply = e.getPlayer();
             int[] nutrition = new int[Nutrition.NUMOFNUTS];
-            if (e.getItem().hasItemMeta() 
-                    && e.getItem().getItemMeta().hasLore() 
-                    && e.getItem().getItemMeta().hasDisplayName() 
-                    && e.getItem().getItemMeta().getDisplayName().contains("Meal")) {
+            if (CookingSurface.isMeal(e.getItem())) {
                 String nutritionLine = e.getItem().getItemMeta().getLore().get(0);
                 String[] result = nutritionLine.split("\\s*"+ChatColor.COLOR_CHAR+"[0123456789abcdef][A-Z]", Nutrition.NUMOFNUTS+1);
                 int nutId = 0;
