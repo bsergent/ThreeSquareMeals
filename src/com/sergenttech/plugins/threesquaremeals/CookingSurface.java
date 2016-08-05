@@ -171,24 +171,39 @@ public class CookingSurface implements Listener {
         int maxNutId = 0;
         int maxNutVal = 0;
         for (int n = 0; n < Nutrition.NUMOFNUTS; n++) {
-            if (nutrition[n] > maxNutVal) maxNutId = n;
+            if (nutrition[n] > maxNutVal) {
+                maxNutId = n;
+                maxNutVal = nutrition[n];
+            }
         }
         switch (maxNutId) {
             case 0:
-                // Salad
+                // Fruit
+                result = new ItemStack(Material.BEETROOT_SOUP);
+                im = result.getItemMeta();
+                im.setDisplayName(ChatColor.RESET+"Meal");
+                break;
+            case 1:
+                // Vegetable
                 result = new ItemStack(Material.MUSHROOM_SOUP);
                 im = result.getItemMeta();
                 im.setDisplayName(ChatColor.RESET+"Salad");
                 break;
+            case 2:
+                // Grain
+                result = new ItemStack(Material.MUSHROOM_SOUP);
+                im = result.getItemMeta();
+                im.setDisplayName(ChatColor.RESET+"Cereal");
+                break;
             case 3:
-                // Stew
+                // Protein
                 result = new ItemStack(Material.RABBIT_STEW);
                 im = result.getItemMeta();
                 im.setDisplayName(ChatColor.RESET+"Stew");
                 break;
             default:
                 // Meal
-                result = new ItemStack(Material.BEETROOT_SOUP);
+                result = new ItemStack(Material.MUSHROOM_SOUP);
                 im = result.getItemMeta();
                 im.setDisplayName(ChatColor.RESET+"Meal");
                 break;
@@ -225,7 +240,7 @@ public class CookingSurface implements Listener {
         if (!is.hasItemMeta()) return false;
         if (!is.getItemMeta().hasDisplayName()) return false;
         if (!is.getItemMeta().hasLore()) return false;
-        if (!is.getItemMeta().getDisplayName().contains("Salad") && !is.getItemMeta().getDisplayName().contains("Stew") && !is.getItemMeta().getDisplayName().contains("Meal")) return false;
+        if (!is.getItemMeta().getDisplayName().contains("Salad") && !is.getItemMeta().getDisplayName().contains("Stew") && !is.getItemMeta().getDisplayName().contains("Meal") && !is.getItemMeta().getDisplayName().contains("Cereal")) return false;
         return true;
     }
    
@@ -249,14 +264,21 @@ public class CookingSurface implements Listener {
             if (slot == resultSlot && (e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
                 for (int iSlot : ingredientSlots) {
                     if (contents[iSlot] != null) {
-                        if (contents[iSlot].getType() == Material.MILK_BUCKET) {
-                            contents[iSlot].setType(Material.BUCKET);
-                        } else {
-                            if (contents[iSlot].getAmount() <= 1) {
-                                e.getInventory().setItem(iSlot, null);
-                            } else {
-                                contents[iSlot].setAmount(contents[iSlot].getAmount() - 1);
-                            }
+                        if (null != contents[iSlot].getType()) switch (contents[iSlot].getType()) {
+                            case MILK_BUCKET:
+                                contents[iSlot].setType(Material.BUCKET);
+                                break;
+                            case MUSHROOM_SOUP:
+                            case RABBIT_STEW:
+                            case BEETROOT_SOUP:
+                                e.getInventory().setItem(iSlot, new ItemStack(Material.BOWL));
+                                break;
+                            default:
+                                if (contents[iSlot].getAmount() <= 1) {
+                                    e.getInventory().setItem(iSlot, null);
+                                } else {
+                                    contents[iSlot].setAmount(contents[iSlot].getAmount() - 1);
+                                }   break;
                         }
                     }
                 }
