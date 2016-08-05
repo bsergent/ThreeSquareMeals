@@ -163,15 +163,36 @@ public class CookingSurface implements Listener {
         }
         
         // Determine material based on nutrition
-        ItemStack result = new ItemStack(Material.MUSHROOM_SOUP);
         // Protein > Rabbit Stew
         // Vegetables > Retextured Mushroom Soup
         // Fruits > Beetroot Stew
-        
-        // Add meta data based on nutrition
-        ItemMeta im = result.getItemMeta();
-        // Change name based upon nutrition
-        im.setDisplayName(ChatColor.RESET+"Meal");
+        ItemStack result;
+        ItemMeta im;
+        int maxNutId = 0;
+        int maxNutVal = 0;
+        for (int n = 0; n < Nutrition.NUMOFNUTS; n++) {
+            if (nutrition[n] > maxNutVal) maxNutId = n;
+        }
+        switch (maxNutId) {
+            case 0:
+                // Salad
+                result = new ItemStack(Material.MUSHROOM_SOUP);
+                im = result.getItemMeta();
+                im.setDisplayName(ChatColor.RESET+"Salad");
+                break;
+            case 3:
+                // Stew
+                result = new ItemStack(Material.RABBIT_STEW);
+                im = result.getItemMeta();
+                im.setDisplayName(ChatColor.RESET+"Stew");
+                break;
+            default:
+                // Meal
+                result = new ItemStack(Material.BEETROOT_SOUP);
+                im = result.getItemMeta();
+                im.setDisplayName(ChatColor.RESET+"Meal");
+                break;
+        }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < Nutrition.NUMOFNUTS; i++) {
             sb.append(Nutrition.symbols[i]);
@@ -204,7 +225,8 @@ public class CookingSurface implements Listener {
         if (!is.hasItemMeta()) return false;
         if (!is.getItemMeta().hasDisplayName()) return false;
         if (!is.getItemMeta().hasLore()) return false;
-        return is.getItemMeta().getDisplayName().contains("Meal");
+        if (!is.getItemMeta().getDisplayName().contains("Salad") && !is.getItemMeta().getDisplayName().contains("Stew") && !is.getItemMeta().getDisplayName().contains("Meal")) return false;
+        return true;
     }
    
     @EventHandler(priority=EventPriority.MONITOR)

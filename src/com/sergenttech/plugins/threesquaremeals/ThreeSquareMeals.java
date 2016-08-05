@@ -205,10 +205,7 @@ public class ThreeSquareMeals extends JavaPlugin {
                 if (nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) > 20) nutConfig.set(ply.getUniqueId()+".nut."+id, 20);
             }
             
-            if (e.getItem().hasItemMeta() 
-                    && e.getItem().getItemMeta().hasLore() 
-                    && e.getItem().getItemMeta().hasDisplayName() 
-                    && e.getItem().getItemMeta().getDisplayName().contains("Meal")) {
+            if (CookingSurface.isMeal(e.getItem())) {
                 e.setCancelled(true);
                 ItemStack is = e.getItem();
                 ItemMeta im = is.getItemMeta();
