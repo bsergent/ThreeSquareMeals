@@ -67,14 +67,14 @@ public enum Nutrition {
     protected final int[] nutrition = new int[NUMOFNUTS]; // F V G P D
     protected final ArrayList<PotionEffect> effects = new ArrayList();
     
-    public static final String[] symbols = new String[] {
+    public static final String[] SYMBOLS = new String[] {
         ChatColor.AQUA+"F",
         ChatColor.GREEN+"V",
         ChatColor.YELLOW+"G",
         ChatColor.RED+"P",
         ChatColor.WHITE+"D"
     };
-    public static final String[] names = new String[] {
+    public static final String[] NAMES = new String[] {
         ChatColor.AQUA+"F"+ChatColor.RESET+"ruit        ",
         ChatColor.GREEN+"V"+ChatColor.RESET+"egetables",
         ChatColor.YELLOW+"G"+ChatColor.RESET+"rain       ",

@@ -2,6 +2,7 @@
 package com.sergenttech.plugins.threesquaremeals;
 
 import java.util.Arrays;
+import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -102,6 +103,39 @@ public class CookingSurface implements Listener {
         }
         if (allNull) return null;
         
+        // Check if combining meals
+        ItemStack mealToCombine = null;
+        for (int i : ingredientSlots) {
+            if (contents[i] != null) {
+                if (!isMeal(contents[i]) || (mealToCombine != null && !isSimilarMeal(mealToCombine, contents[i]))) {
+                    mealToCombine = null;
+                    break;
+                } else {
+                    mealToCombine = contents[i].clone();
+                }
+            }
+        }
+        
+        // Combine meals
+        if (mealToCombine != null) {
+            int portions = 0;
+            for (int i : ingredientSlots) {
+                if (contents[i] != null) {
+                    String portionLine = contents[i].getItemMeta().getLore().get(1);
+                    portionLine = portionLine.split(" ", 2)[0];
+                    portionLine = portionLine.substring(2);
+                    portions += Integer.parseInt(portionLine);
+                }
+            }
+            ItemMeta im = mealToCombine.getItemMeta();
+            List<String> lore = im.getLore();
+            lore.set(1, ChatColor.GRAY+""+portions+" portion(s)");
+            im.setLore(lore);
+            mealToCombine.setItemMeta(im);
+            return mealToCombine;
+        }
+        
+        // Else create new meal
         float portions = 0.0f;
         int hunger = 0;
         float saturation = 0.0f;
@@ -129,18 +163,54 @@ public class CookingSurface implements Listener {
         }
         
         // Determine material based on nutrition
-        ItemStack result = new ItemStack(Material.MUSHROOM_SOUP);
         // Protein > Rabbit Stew
         // Vegetables > Retextured Mushroom Soup
         // Fruits > Beetroot Stew
-        
-        // Add meta data based on nutrition
-        ItemMeta im = result.getItemMeta();
-        // Change name based upon nutrition
-        im.setDisplayName(ChatColor.RESET+"Meal");
+        ItemStack result;
+        ItemMeta im;
+        int maxNutId = 0;
+        int maxNutVal = 0;
+        for (int n = 0; n < Nutrition.NUMOFNUTS; n++) {
+            if (nutrition[n] > maxNutVal) {
+                maxNutId = n;
+                maxNutVal = nutrition[n];
+            }
+        }
+        switch (maxNutId) {
+            case 0:
+                // Fruit
+                result = new ItemStack(Material.BEETROOT_SOUP);
+                im = result.getItemMeta();
+                im.setDisplayName(ChatColor.RESET+"Meal");
+                break;
+            case 1:
+                // Vegetable
+                result = new ItemStack(Material.MUSHROOM_SOUP);
+                im = result.getItemMeta();
+                im.setDisplayName(ChatColor.RESET+"Salad");
+                break;
+            case 2:
+                // Grain
+                result = new ItemStack(Material.MUSHROOM_SOUP);
+                im = result.getItemMeta();
+                im.setDisplayName(ChatColor.RESET+"Cereal");
+                break;
+            case 3:
+                // Protein
+                result = new ItemStack(Material.RABBIT_STEW);
+                im = result.getItemMeta();
+                im.setDisplayName(ChatColor.RESET+"Stew");
+                break;
+            default:
+                // Meal
+                result = new ItemStack(Material.MUSHROOM_SOUP);
+                im = result.getItemMeta();
+                im.setDisplayName(ChatColor.RESET+"Meal");
+                break;
+        }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < Nutrition.NUMOFNUTS; i++) {
-            sb.append(Nutrition.symbols[i]);
+            sb.append(Nutrition.SYMBOLS[i]);
             //sb.append(':');
             sb.append(nutrition[i]);
             sb.append(' ');
@@ -156,6 +226,22 @@ public class CookingSurface implements Listener {
         result.setItemMeta(im);
         
         return result;
+    }
+    
+    public static boolean isSimilarMeal(ItemStack is1, ItemStack is2) {
+        if (!isMeal(is1) || !isMeal(is2)) return false;
+        if (!is1.getItemMeta().getLore().get(0).equals(is2.getItemMeta().getLore().get(0))) return false;
+        if (!is1.getItemMeta().getLore().get(2).equals(is2.getItemMeta().getLore().get(2))) return false;
+        return is1.getItemMeta().getLore().get(3).equals(is2.getItemMeta().getLore().get(3));
+    }
+    
+    public static boolean isMeal(ItemStack is) {
+        if (is.getType() != Material.MUSHROOM_SOUP && is.getType() != Material.RABBIT_STEW && is.getType() != Material.BEETROOT_SOUP) return false;
+        if (!is.hasItemMeta()) return false;
+        if (!is.getItemMeta().hasDisplayName()) return false;
+        if (!is.getItemMeta().hasLore()) return false;
+        if (!is.getItemMeta().getDisplayName().contains("Salad") && !is.getItemMeta().getDisplayName().contains("Stew") && !is.getItemMeta().getDisplayName().contains("Meal") && !is.getItemMeta().getDisplayName().contains("Cereal")) return false;
+        return true;
     }
    
     @EventHandler(priority=EventPriority.MONITOR)
@@ -178,14 +264,21 @@ public class CookingSurface implements Listener {
             if (slot == resultSlot && (e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
                 for (int iSlot : ingredientSlots) {
                     if (contents[iSlot] != null) {
-                        if (contents[iSlot].getType() == Material.MILK_BUCKET) {
-                            contents[iSlot].setType(Material.BUCKET);
-                        } else {
-                            if (contents[iSlot].getAmount() <= 1) {
-                                e.getInventory().setItem(iSlot, null);
-                            } else {
-                                contents[iSlot].setAmount(contents[iSlot].getAmount() - 1);
-                            }
+                        if (null != contents[iSlot].getType()) switch (contents[iSlot].getType()) {
+                            case MILK_BUCKET:
+                                contents[iSlot].setType(Material.BUCKET);
+                                break;
+                            case MUSHROOM_SOUP:
+                            case RABBIT_STEW:
+                            case BEETROOT_SOUP:
+                                e.getInventory().setItem(iSlot, new ItemStack(Material.BOWL));
+                                break;
+                            default:
+                                if (contents[iSlot].getAmount() <= 1) {
+                                    e.getInventory().setItem(iSlot, null);
+                                } else {
+                                    contents[iSlot].setAmount(contents[iSlot].getAmount() - 1);
+                                }   break;
                         }
                     }
                 }
