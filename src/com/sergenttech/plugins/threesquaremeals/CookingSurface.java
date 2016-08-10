@@ -210,7 +210,7 @@ public class CookingSurface implements Listener {
         }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < Nutrition.NUMOFNUTS; i++) {
-            sb.append(Nutrition.symbols[i]);
+            sb.append(Nutrition.SYMBOLS[i]);
             //sb.append(':');
             sb.append(nutrition[i]);
             sb.append(' ');

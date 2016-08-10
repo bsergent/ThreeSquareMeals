@@ -103,7 +103,7 @@ public class ThreeSquareMeals extends JavaPlugin {
                         ply.sendMessage(getNutritionMeter(ply, i));
                     }
                     ply.sendMessage("    "+(getMaxHealth(ply) / 2.0f)+" hrts  Max Health");
-                    ply.sendMessage("Hunger: "+ply.getFoodLevel()+"/20    "+"Saturation: "+ply.getSaturation()+"/20");
+                    //ply.sendMessage("Hunger: "+ply.getFoodLevel()+"/20    "+"Saturation: "+ply.getSaturation()+"/20");
                 } else {
                     sender.sendMessage("    Nutritional details are shown here for players.");
                 }
@@ -146,7 +146,7 @@ public class ThreeSquareMeals extends JavaPlugin {
         for (int j = level; j < 20; j++) {
             sb.append(".");
         }
-        sb.append(ChatColor.WHITE).append("] ").append(Nutrition.names[id]);
+        sb.append(ChatColor.WHITE).append("] ").append(Nutrition.NAMES[id]);
         return sb.toString();
     }
     
@@ -251,12 +251,26 @@ public class ThreeSquareMeals extends JavaPlugin {
                 }
             }
             
-            updateHealth(e.getPlayer());
+            StringBuilder updateMessage = new StringBuilder();
+            updateMessage.append(prefix);
+            updateMessage.append(' ');
+            for (int i = 0; i < Nutrition.NUMOFNUTS; i++) {
+                if (nutrition[i] != 0) {
+                    updateMessage.append(Nutrition.SYMBOLS[i]);
+                    updateMessage.append(ChatColor.RESET);
+                    //updateMessage.append(nutConfig.get(ply.getUniqueId()+".nut."+i,20));
+                    updateMessage.append('+');
+                    updateMessage.append(nutrition[i]);
+                    updateMessage.append(' ');
+                }
+            }
+            ply.sendMessage(updateMessage.toString().trim());
+            
+            updateHealth(ply);
             try {
                 nutConfig.save(playerNutFile);
             } catch (IOException ex) {
             }
-            // TODO Show nutrition change in chat
         }
         
         @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.NORMAL)
@@ -285,7 +299,10 @@ public class ThreeSquareMeals extends JavaPlugin {
             for (Player ply : players) {
                 for (int id = 0; id < Nutrition.NUMOFNUTS; id++) {
                     nutConfig.set(ply.getUniqueId()+".nut."+id, nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) - 1);
-                    if (nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) < 0) nutConfig.set(ply.getUniqueId()+".nut."+id, 0);
+                    if (nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) <= 0) {
+                        nutConfig.set(ply.getUniqueId()+".nut."+id, 0);
+                        ply.sendMessage(prefix+" Your nutrition meter(s) are low. Use "+ChatColor.ITALIC+"/nut"+ChatColor.RESET+" to see which food group you need to eat.");
+                    }
                 }
                 updateHealth(ply);
                 try {
