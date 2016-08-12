@@ -228,7 +228,7 @@ public class ThreeSquareMeals extends JavaPlugin {
                 // Portions
                 int portionsValue = Integer.parseInt(lore.get(1).split(" ")[0].substring(2));
                 portionsValue--;
-                lore.set(1, ChatColor.GRAY + "" + (portionsValue) + " portion(s)");
+                lore.set(1, ChatColor.GRAY + "" + (portionsValue) + " serving(s)");
                 
                 if (portionsValue <= 0) {
                     PlayerInventory inv = e.getPlayer().getInventory();

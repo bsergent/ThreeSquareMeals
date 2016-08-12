@@ -6,6 +6,7 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -15,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -163,62 +165,65 @@ public class CookingSurface implements Listener {
         }
         
         // Determine material based on nutrition
-        // Protein > Rabbit Stew
-        // Vegetables > Retextured Mushroom Soup
-        // Fruits > Beetroot Stew
-        ItemStack result;
-        ItemMeta im;
+        ItemStack result = new ItemStack(Material.MUSHROOM_SOUP);
+        ItemMeta im = result.getItemMeta();
         int maxNutId = 0;
         int maxNutVal = 0;
+        boolean superFood = true;
         for (int n = 0; n < Nutrition.NUMOFNUTS; n++) {
             if (nutrition[n] > maxNutVal) {
                 maxNutId = n;
                 maxNutVal = nutrition[n];
             }
+            if (nutrition[n] <= 0) {
+                superFood = false;
+            }
         }
-        switch (maxNutId) {
-            case 0:
-                // Fruit
-                result = new ItemStack(Material.BEETROOT_SOUP);
-                im = result.getItemMeta();
-                im.setDisplayName(ChatColor.RESET+"Meal");
-                break;
-            case 1:
-                // Vegetable
-                result = new ItemStack(Material.MUSHROOM_SOUP);
-                im = result.getItemMeta();
-                im.setDisplayName(ChatColor.RESET+"Salad");
-                break;
-            case 2:
-                // Grain
-                result = new ItemStack(Material.MUSHROOM_SOUP);
-                im = result.getItemMeta();
-                im.setDisplayName(ChatColor.RESET+"Cereal");
-                break;
-            case 3:
-                // Protein
-                result = new ItemStack(Material.RABBIT_STEW);
-                im = result.getItemMeta();
-                im.setDisplayName(ChatColor.RESET+"Stew");
-                break;
-            default:
-                // Meal
-                result = new ItemStack(Material.MUSHROOM_SOUP);
-                im = result.getItemMeta();
-                im.setDisplayName(ChatColor.RESET+"Meal");
-                break;
+        if (superFood) {
+            // Superfood
+            result.setType(Material.MUSHROOM_SOUP);
+            im.addEnchant(Enchantment.LUCK, 1, false);
+            im.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            im.setDisplayName(ChatColor.RESET+"Superfood");
+        } else {
+            switch (maxNutId) {
+                case 0:
+                    // Fruit
+                    result.setType(Material.BEETROOT_SOUP);
+                    im.setDisplayName(ChatColor.RESET+"Meal");
+                    break;
+                case 1:
+                    // Vegetable
+                    result.setType(Material.MUSHROOM_SOUP);
+                    im.setDisplayName(ChatColor.RESET+"Salad");
+                    break;
+                case 2:
+                    // Grain
+                    result.setType(Material.MUSHROOM_SOUP);
+                    im.setDisplayName(ChatColor.RESET+"Cereal");
+                    break;
+                case 3:
+                    // Protein
+                    result.setType(Material.RABBIT_STEW);
+                    im.setDisplayName(ChatColor.RESET+"Stew");
+                    break;
+                default:
+                    // Meal
+                    result.setType(Material.MUSHROOM_SOUP);
+                    im.setDisplayName(ChatColor.RESET+"Meal");
+                    break;
+            }
         }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < Nutrition.NUMOFNUTS; i++) {
             sb.append(Nutrition.SYMBOLS[i]);
-            //sb.append(':');
             sb.append(nutrition[i]);
             sb.append(' ');
         }
         im.setLore(Arrays.asList(new String[] {
             sb.toString().trim(),
-            ChatColor.GRAY+""+(int) portions+" portion(s)",
-            ChatColor.GRAY+""+(hunger / 2f)+" shanks",
+            ChatColor.GRAY+""+(int) portions+" serving(s)",
+            ChatColor.GRAY+""+(hunger / 2f)+" shank(s)",
             ChatColor.GRAY+""+saturation+" saturation"
         }));
         
