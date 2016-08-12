@@ -238,9 +238,11 @@ public class CookingSurface implements Listener {
     public static boolean isMeal(ItemStack is) {
         if (is.getType() != Material.MUSHROOM_SOUP && is.getType() != Material.RABBIT_STEW && is.getType() != Material.BEETROOT_SOUP) return false;
         if (!is.hasItemMeta()) return false;
-        if (!is.getItemMeta().hasDisplayName()) return false;
+        //if (!is.getItemMeta().hasDisplayName()) return false;
         if (!is.getItemMeta().hasLore()) return false;
-        if (!is.getItemMeta().getDisplayName().contains("Salad") && !is.getItemMeta().getDisplayName().contains("Stew") && !is.getItemMeta().getDisplayName().contains("Meal") && !is.getItemMeta().getDisplayName().contains("Cereal")) return false;
+        if (is.getItemMeta().getLore().isEmpty()) return false;
+        if (!is.getItemMeta().getLore().get(0).matches("((§[0-9a-fkmolnr])*[A-Za-z]+(§[0-9a-fkmolnr])*[0-9]+\\s?)+")) return false;
+        //if (!is.getItemMeta().getDisplayName().contains("Salad") && !is.getItemMeta().getDisplayName().contains("Stew") && !is.getItemMeta().getDisplayName().contains("Meal") && !is.getItemMeta().getDisplayName().contains("Cereal")) return false;
         return true;
     }
    

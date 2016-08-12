@@ -296,12 +296,17 @@ public class ThreeSquareMeals extends JavaPlugin {
         @Override
         public void run() {
             Collection<Player> players = (Collection<Player>) getServer().getOnlinePlayers();
+            boolean sentLowWarning;
             for (Player ply : players) {
+                sentLowWarning = false;
                 for (int id = 0; id < Nutrition.NUMOFNUTS; id++) {
-                    nutConfig.set(ply.getUniqueId()+".nut."+id, nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) - 1);
-                    if (nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) <= 0) {
-                        nutConfig.set(ply.getUniqueId()+".nut."+id, 0);
+                    if (nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) == 1 && !sentLowWarning) {
                         ply.sendMessage(prefix+" Your nutrition meter(s) are low. Use "+ChatColor.ITALIC+"/nut"+ChatColor.RESET+" to see which food group you need to eat.");
+                        sentLowWarning = true;
+                    }
+                    nutConfig.set(ply.getUniqueId()+".nut."+id, nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) - 1);
+                    if (nutConfig.getInt(ply.getUniqueId()+".nut."+id, 20) < 0) {
+                        nutConfig.set(ply.getUniqueId()+".nut."+id, 0);
                     }
                 }
                 updateHealth(ply);
